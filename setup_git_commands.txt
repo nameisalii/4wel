@@ -1,0 +1,19 @@
+# Commands to run once Xcode Command Line Tools are installed:
+
+# 1. Initialize repository
+git init
+
+# 2. Add all files
+git add .
+
+# 3. Commit
+git commit -m "Add robot navigation training project with extended training scripts"
+
+# 4. Create branch
+git branch -M main
+
+# 5. Add your GitHub repository (replace with your actual repo URL)
+# git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+
+# 6. Push to GitHub
+# git push -u origin main

@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Models and checkpoints
+models/
+checkpoints/
+logs/
+tensorboard_logs/
+
+# MCAP and data files
+*.mcap
+*.json
+!requirements.txt
+!package.json
+
+# Large training data files (too big for GitHub)
+training.json
+/training.json
+deliverables/*.mcap.json
+deliverables/**/*.mcap.json
+/single_robot_training.mcap.json
+/multi_robot_training.mcap.json
+*.mcap.json
+!requirements.txt
+
+# Test outputs
+kinematics_test.png
+*.png
+*.jpg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
