@@ -20,19 +20,24 @@ from mcap_writer import MCAPWriter
 
 class TrainingCallback(BaseCallback):
     
-    def __init__(self, recorder, env, verbose=0):
+    def __init__(self, recorder, env, verbose=0, record_every_n_steps=10):
         super().__init__(verbose)
         self.recorder = recorder
         self.env = env
+        self.record_every_n_steps = record_every_n_steps
+        self.step_count = 0
     
     def _on_step(self) -> bool:
-        if self.recorder.record and hasattr(self.env, 'envs') and len(self.env.envs) > 0:
-            if hasattr(self.env.envs[0], 'unwrapped'):
-                env_unwrapped = self.env.envs[0].unwrapped
-                if isinstance(env_unwrapped, RobotNavigationEnv):
-                    robots = env_unwrapped.robots
-                    targets = env_unwrapped.targets
-                    self.recorder.record_step(robots, targets)
+        self.step_count += 1
+        # Record visualization markers during training
+        if self.recorder.record and self.step_count % self.record_every_n_steps == 0:
+            if hasattr(self.env, 'envs') and len(self.env.envs) > 0:
+                if hasattr(self.env.envs[0], 'unwrapped'):
+                    env_unwrapped = self.env.envs[0].unwrapped
+                    if isinstance(env_unwrapped, RobotNavigationEnv):
+                        robots = env_unwrapped.robots
+                        targets = env_unwrapped.targets
+                        self.recorder.record_step(robots, targets)
         return True
 
 
@@ -188,7 +193,8 @@ def train_single_robot(total_timesteps: int = 5000000,  # Changed from 100000 to
         name_prefix="ppo_single"
     )
     
-    training_callback = TrainingCallback(recorder, env)
+    # Record visualization every 10 steps during training to avoid too much data
+    training_callback = TrainingCallback(recorder, env, record_every_n_steps=10)
     
     try:
         model.learn(
@@ -260,7 +266,8 @@ def train_multi_robot(num_robots: int = 3,
         name_prefix="ppo_multi"
     )
     
-    training_callback = TrainingCallback(recorder, env)
+    # Record visualization every 10 steps during training to avoid too much data
+    training_callback = TrainingCallback(recorder, env, record_every_n_steps=10)
     
     try:
         model.learn(

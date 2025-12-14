@@ -110,7 +110,9 @@ class MCAPWriter:
             
             for msg in self.messages:
                 timestamp_ns = int(msg['timestamp'] * 1e9)
-                data = json_lib.dumps(msg['data']).encode('utf-8')
+                # Convert numpy types to native Python types for JSON serialization
+                data_dict = self._convert_numpy_types(msg['data'])
+                data = json_lib.dumps(data_dict, default=self._json_serializer).encode('utf-8')
                 writer.add_message(
                     channel_id=markers_channel_id,
                     log_time=timestamp_ns,
@@ -120,7 +122,9 @@ class MCAPWriter:
             
             for metric in self.metrics:
                 timestamp_ns = int(metric['timestamp'] * 1e9)
-                data = json_lib.dumps(metric).encode('utf-8')
+                # Convert numpy types to native Python types for JSON serialization
+                metric_dict = self._convert_numpy_types(metric)
+                data = json_lib.dumps(metric_dict, default=self._json_serializer).encode('utf-8')
                 writer.add_message(
                     channel_id=metrics_channel_id,
                     log_time=timestamp_ns,
@@ -167,6 +171,23 @@ class MCAPWriter:
         
         return str(output_json)
     
+    def _convert_numpy_types(self, obj):
+        """Recursively convert numpy types to native Python types."""
+        if isinstance(obj, dict):
+            return {key: self._convert_numpy_types(value) for key, value in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [self._convert_numpy_types(item) for item in obj]
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        else:
+            return obj
+    
     def _json_serializer(self, obj):
         if isinstance(obj, np.integer):
             return int(obj)
@@ -174,6 +195,8 @@ class MCAPWriter:
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
         raise TypeError(f"Type {type(obj)} not serializable")
 
 

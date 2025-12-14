@@ -22,32 +22,39 @@ class MCAPVisualizer:
         W = params.track_width / 2
         
         corners_robot = np.array([
-            [L, W],   
-            [L, -W],  
-            [-L, -W], 
-            [-L, W]   
+            [L, W, 0.0],   
+            [L, -W, 0.0],  
+            [-L, -W, 0.0], 
+            [-L, W, 0.0]   
         ])
         
         cos_theta = np.cos(state.theta)
         sin_theta = np.sin(state.theta)
-        rotation = np.array([[cos_theta, -sin_theta],
-                            [sin_theta, cos_theta]])
+        rotation = np.array([[cos_theta, -sin_theta, 0],
+                            [sin_theta, cos_theta, 0],
+                            [0, 0, 1]])
         
         corners_global = (rotation @ corners_robot.T).T
         corners_global[:, 0] += state.x
         corners_global[:, 1] += state.y
         
+        # Format for Foxglove Studio visualization
         marker = {
             'type': 'robot_body',
             'robot_id': robot_id,
             'timestamp': timestamp,
             'pose': {
-                'x': state.x,
-                'y': state.y,
-                'theta': state.theta
+                'position': {'x': state.x, 'y': state.y, 'z': 0.0},
+                'orientation': {
+                    'x': 0.0,
+                    'y': 0.0,
+                    'z': np.sin(state.theta / 2.0),
+                    'w': np.cos(state.theta / 2.0)
+                }
             },
+            'scale': {'x': params.wheelbase, 'y': params.track_width, 'z': 0.1},
             'corners': corners_global.tolist(),
-            'color': [0.2, 0.6, 0.8, 1.0]
+            'color': {'r': 0.2, 'g': 0.6, 'b': 0.8, 'a': 1.0}
         }
         
         return marker
@@ -76,19 +83,25 @@ class MCAPVisualizer:
         for i, (name, pos, angle, color) in enumerate(zip(wheel_names, wheel_positions, steering_angles, wheel_colors)):
             wheel_theta = state.theta + angle
             
+            # Format for Foxglove Studio visualization
             marker = {
                 'type': 'wheel',
                 'robot_id': robot_id,
                 'wheel_name': name,
                 'timestamp': timestamp,
-                'position': {
-                    'x': pos[0],
-                    'y': pos[1],
-                    'theta': wheel_theta
+                'pose': {
+                    'position': {'x': pos[0], 'y': pos[1], 'z': 0.0},
+                    'orientation': {
+                        'x': 0.0,
+                        'y': 0.0,
+                        'z': np.sin(wheel_theta / 2.0),
+                        'w': np.cos(wheel_theta / 2.0)
+                    }
                 },
                 'steering_angle': angle,
+                'scale': {'x': params.wheel_radius * 2, 'y': params.wheel_radius * 2, 'z': 0.1},
                 'radius': params.wheel_radius,
-                'color': color
+                'color': {'r': color[0], 'g': color[1], 'b': color[2], 'a': color[3]}
             }
             markers.append(marker)
         
@@ -105,19 +118,17 @@ class MCAPVisualizer:
         
         markers = []
         for i, wheel_pos in enumerate(wheel_positions):
+            # Format for Foxglove Studio visualization (line marker)
             marker = {
                 'type': 'link',
                 'robot_id': robot_id,
                 'timestamp': timestamp,
-                'start': {
-                    'x': state.x,
-                    'y': state.y
-                },
-                'end': {
-                    'x': wheel_pos[0],
-                    'y': wheel_pos[1]
-                },
-                'color': [0.5, 0.5, 0.5, 0.5]
+                'points': [
+                    {'x': state.x, 'y': state.y, 'z': 0.0},
+                    {'x': wheel_pos[0], 'y': wheel_pos[1], 'z': 0.0}
+                ],
+                'scale': {'x': 0.05, 'y': 0.0, 'z': 0.0},  # Line width
+                'color': {'r': 0.5, 'g': 0.5, 'b': 0.5, 'a': 0.5}
             }
             markers.append(marker)
         
@@ -134,15 +145,17 @@ class MCAPVisualizer:
         if timestamp is None:
             timestamp = time.time()
         
+        # Format for Foxglove Studio visualization (sphere marker)
         marker = {
             'type': 'icr',
             'robot_id': robot_id,
             'timestamp': timestamp,
-            'position': {
-                'x': icr_pos[0],
-                'y': icr_pos[1]
+            'pose': {
+                'position': {'x': icr_pos[0], 'y': icr_pos[1], 'z': 0.0},
+                'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0}
             },
-            'color': [1.0, 0.0, 1.0, 1.0]
+            'scale': {'x': 0.2, 'y': 0.2, 'z': 0.2},
+            'color': {'r': 1.0, 'g': 0.0, 'b': 1.0, 'a': 1.0}
         }
         
         return marker
@@ -153,16 +166,18 @@ class MCAPVisualizer:
         if timestamp is None:
             timestamp = time.time()
         
+        # Format for Foxglove Studio visualization (cylinder/sphere marker)
         marker = {
             'type': 'target',
             'target_id': target_id,
             'timestamp': timestamp,
-            'position': {
-                'x': target_x,
-                'y': target_y
+            'pose': {
+                'position': {'x': target_x, 'y': target_y, 'z': 0.0},
+                'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0}
             },
-            'color': [0.0, 1.0, 0.0, 1.0],
-            'radius': 0.3
+            'scale': {'x': 0.3, 'y': 0.3, 'z': 0.1},
+            'radius': 0.3,
+            'color': {'r': 0.0, 'g': 1.0, 'b': 0.0, 'a': 1.0}
         }
         
         return marker
